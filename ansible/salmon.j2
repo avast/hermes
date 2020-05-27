@@ -1,0 +1,76 @@
+global:
+    router_defaults: {'host': '.+'}
+    handlers: ['app.handlers.sample']
+    error_msg_sender: 'salmon@info.com'
+    error_msg_receiver: '{{ error_msg_receiver }}'
+
+receiver:
+    listenhost: {{ listenhost }}
+    listenport: {{ listenport }}
+    sensorname: salmon
+{% if authenabled == 'yes' %}
+    authenabled: True
+{% else %}
+    authenabled: False
+{% endif %}
+    credentials: [({{ username }}, {{ password }})]
+
+relay:
+    globalcounter: 12
+    schedulertime: 60
+    # if you change relayhost and relayport here, 
+    # you will have to change it in file /etc/exim4/exim4.conf.template too
+    relayhost: 127.0.0.1
+    relayport: 2500
+{% if relay_enabled == 'yes' %}
+    relay_enabled: True
+{% else %}
+    relay_enabled: False
+{% endif %}
+{% if save_eml == 'yes' %}
+    save_eml: True
+{% else %}
+    save_eml: False
+{% endif %}
+{% if save_attachment == 'yes' %}
+    save_attachment: True
+{% else %}
+    save_attachment: False
+{% endif %}
+{% if destroy_link == 'yes' %}
+    destroy_link: True
+{% else %}
+    destroy_link: False
+{% endif %}
+{% if destroy_attachment == 'yes' %}
+    destroy_attachment: True
+{% else %}
+    destroy_attachment: False
+{% endif %}
+{% if destroy_reply_to == 'yes' %}
+    destroy_reply_to: True
+{% else %}
+    destroy_reply_to: False
+{% endif %}
+{% if save_statistics == 'yes' %}
+    save_statistics: True
+{% else %}
+    save_statistics: False
+{% endif %}
+    use_rule_file: False
+    analyze_text: False
+    mqtt: False
+    # if you set mqtt to True, it is necessary to set all of the following variables
+    mqtt_server: 'mqtt_server_url'
+    mqtt_destination_ip: 127.0.0.1
+    mqtt_username: 'mqtt_username'
+    mqtt_password: 'mqtt_password'
+    eml_msg_topic: 'eml_msg_topic'
+    global_msg_topic: 'global_msg_topic'
+    mqtt_honeypot: 'mqtt_honeypot'
+
+directory:
+    queuepath: {{ local_home }}/salmon-honeypot/salmon-receiver/myproject/run/queue
+    undeliverable_path: {{ local_home }}/salmon-honeypot/salmon-receiver/myproject/run/undeliverable
+    rawspampath: {{ local_home }}/salmon-honeypot/salmon-receiver/myproject/run/rawspams
+    attachpath: {{ local_home }}/salmon-honeypot/salmon-receiver/myproject/run/attachments

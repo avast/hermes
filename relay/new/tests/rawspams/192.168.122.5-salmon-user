@@ -1,0 +1,24 @@
+Content-Type: multipart/alternative;
+ boundary="===============4425049879940394077=="
+MIME-Version: 1.0
+Date: Sat, 1 Feb 2020 23:13:36 +0300
+From: "Test Test" <test@test.com>
+Reply-To: "Test Test" <test@test.com>
+Subject: Hello
+To: test@test.com
+
+--===============4425049879940394077==
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+
+Y2hhbmdlbWU=
+
+--===============4425049879940394077==
+MIME-Version: 1.0
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: base64
+
+PGRpdiBkaXI9ImF1dG8iPlRlc3Q8L2Rpdj48ZGl2IGRpcj0iYXV0byI+PGJyPjwvZGl2PjxkaXYgZGlyPSJhdXRvIj48YnI+PC9kaXY+
+
+--===============4425049879940394077==--

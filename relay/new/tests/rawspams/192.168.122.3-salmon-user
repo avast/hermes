@@ -1,0 +1,24 @@
+Content-Type: multipart/alternative;
+ boundary="===============8329423952344751968=="
+MIME-Version: 1.0
+Date: Sat, 1 Feb 2020 23:09:58 +0300
+Importance: normal
+Subject: 
+From: test@test.cz
+To: test@test.cz
+reply-to: test
+
+--===============8329423952344751968==
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: base64
+
+dGVzdA==
+
+--===============8329423952344751968==
+MIME-Version: 1.0
+Content-Type: text/html; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></head><body><div>&nbsp; &nbsp; Gamarfo</div><div><br></div><div><br></div><div>www.test.cz</div><div><br></div><div><br></div><div></div><div><br></div><div>Susan</div><div><br></div></body></html>
+--===============8329423952344751968==--

@@ -1,0 +1,33 @@
+global:
+    router_defaults: {'host': '.+'}
+    handlers: ['app.handlers.sample']
+    error_msg_sender: 'salmon@info.com'
+    error_msg_receiver: 'salmon@info.com'
+
+receiver:
+    listenhost: 127.0.0.1
+    listenport: 25
+    sensorname: salmon
+    authenabled: False
+    credentials: ""
+
+relay:
+    globalcounter: 12
+    schedulertime: 60
+    relayhost: 127.0.0.1
+    relayport: 2500
+    relay_enabled: False
+    save_eml: False
+    save_attachment: False
+    destroy_link: False
+    destroy_attachment: False
+    destroy_reply_to: False
+    save_statistics: False
+    use_rule_file: False
+    analyze_text: False
+
+directory:
+    queuepath: ./queue
+    undeliverable_path: ./undeliverable
+    rawspampath: ./rawspams
+    attachpath: ./attachments

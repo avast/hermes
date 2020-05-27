@@ -1,0 +1,23 @@
+[
+    {
+        "name": "example - more complex rule",
+        "OR": [
+        {
+            "field": "body_plain",
+            "pattern": "(example body_plain|example body)"
+        },
+        {
+            "AND": [
+            {
+                "field": "subject",
+                "pattern": "example subject"
+            },
+            {
+                "field": "body_html",
+                "pattern": "example body_html"
+            }
+            ]
+        }
+        ]
+    }
+]

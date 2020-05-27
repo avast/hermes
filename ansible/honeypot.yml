@@ -1,0 +1,515 @@
+---
+- name: Install missing packages
+  hosts: honeypots
+  vars:
+    packages:
+      - exim4-daemon-light 
+      - git
+      - python3-distutils
+      - build-essential
+      - libffi-dev
+      - python3
+      - python3-dev
+      - python3-pip
+      - automake
+      - autoconf
+      - libtool
+      - libfuzzy-dev
+      - sqlite3
+      - libsqlite3-dev
+      - logrotate
+
+  tasks:
+    - name: "{{ packages }} are present"
+      apt:
+        name: "{{ item }}"
+        state: present
+      loop: "{{ packages }}"
+
+
+- name: Configure exim 4
+  hosts: honeypots
+  tasks:
+    - name: Setup port setup in /etc/exim4/exim4.conf.template
+      lineinfile:
+        path: /etc/exim4/exim4.conf.template
+        state: absent
+        regexp: 'daemon_smtp_ports=2500'
+
+    - name: Add daemon_smtp_ports into /etc/exim4/exim4.conf.template
+      lineinfile:
+        path: /etc/exim4/exim4.conf.template
+        regexp: 'daemon_smtp_ports=2500'
+        insertbefore: '# debconf-driven macro definitions get inserted after this line'
+        line: daemon_smtp_ports=2500
+      notify:
+        - restart exim
+
+    - name: Add helo_data into /etc/exim4/conf.d/transport/30_exim4-config_remote_smtp
+      lineinfile:
+        path: /etc/exim4/conf.d/transport/30_exim4-config_remote_smtp
+        regexp: '  helo_data = hermes'
+        insertafter: '  driver = smtp'
+        line: '  helo_data = hermes'
+      notify:
+        - restart exim
+    
+    - name: Setup dc_eximconfig_configtype in /etc/exim4/update-exim4.conf.conf
+      replace:
+        path: /etc/exim4/update-exim4.conf.conf
+        regexp: "dc_eximconfig_configtype='local'"
+        replace: "dc_eximconfig_configtype='internet'"
+      notify:
+        - restart exim
+
+    - name: Exim is running
+      service:
+        name: exim4
+        state: started
+  
+  handlers:
+    - name: restart exim
+      service:
+        name: exim4
+        state: restarted
+
+
+- name: Configure salmon honeypot
+  hosts: honeypots
+  vars:
+    local_home: "{{ ansible_env.HOME }}"
+    lp_logrotate_confd:
+      - path: "salmon"
+        conf: |
+          {{ local_home }}/salmon-honeypot/salmon-receiver/myproject/logs/salmon.log {
+                 daily
+                 rotate 10
+                 size 100M
+                 compress
+                 delaycompress
+          }
+          {{ local_home }}/salmon-honeypot/salmon-relay/myproject/logs/salmon.log {
+                 daily
+                 rotate 10
+                 size 100M
+                 compress
+                 delaycompress
+          }
+
+  tasks:
+    - name: Create a directory $HOME/bin
+      file:
+        path: "{{ local_home }}/bin"
+        state: directory
+        mode: 0755
+
+    - name: Create a directory $HOME/salmon-honeypot
+      file:
+        path: "{{ local_home }}/salmon-honeypot"
+        state: directory
+        mode: 0755
+
+    - name: Create a directory $HOME/salmon-honeypot/configuration
+      file:
+        path: "{{ local_home }}/salmon-honeypot/configuration"
+        state: directory
+        mode: 0755
+    
+    - name: Clone a repository into $HOME/salmon-honeypot-git
+      git:
+        repo: https://github.com/avast/hermes
+        version: master
+        dest: "{{ local_home }}/salmon-honeypot-git"
+
+    - name: Copy salmon-receiver.sh and salmon-relay.sh into $HOME/bin
+      command: cp -r "{{ local_home }}/salmon-honeypot-git/configuration/{{ item }}" "{{ local_home }}/bin"
+      loop:
+        - salmon-receiver.sh
+        - salmon-relay.sh
+
+    - name: Create a symbolic link for salmon-receiver
+      file:
+        src: "{{ local_home }}/bin/salmon-receiver.sh"
+        dest: /usr/bin/salmon-receiver
+        owner: root
+        group: root
+        state: link
+
+    - name: Create a symbolic link for salmon-relay
+      file:
+        src: "{{ local_home }}/bin/salmon-relay.sh"
+        dest: /usr/bin/salmon-relay
+        owner: root
+        group: root
+        state: link
+
+    - name: Install virtualenv
+      pip:
+        name: virtualenv
+        executable: pip3
+
+    - name: Install setuptools
+      pip:
+        name: setuptools
+        executable: pip3
+
+    - name: Install PyYAML
+      pip:
+        name: PyYAML==5.3.1
+        executable: pip3
+    
+    - name: Install psutil
+      pip:
+        name: psutil
+        executable: pip3
+
+    - name: Create cron job for salmonerrornotifier
+      cron:
+        name: "check if salmon is running"
+        minute: "0"
+        hour: "9"
+        job: "{{ local_home }}/salmon-honeypot/configuration/salmonerrornotifier.py"
+
+    - name: Create cron job for salmondeleteold
+      cron:
+        name: "delete old records from maybe_test_emails table"
+        minute: "0"
+        hour: "10"
+        job: "{{ local_home }}/salmon-honeypot/salmon-relay/myproject/salmondeleteold.sh"
+
+    - name: Setup Logrotate for salmon logs
+      blockinfile:
+        path: "/etc/logrotate.d/{{ item.path }}"
+        block: "{{ item.conf }}"
+        create: yes
+      loop: "{{ lp_logrotate_confd }}"
+
+
+- name: Install salmon receiver
+  hosts: honeypots
+  vars:
+    local_home: "{{ ansible_env.HOME }}"
+    necessary_directories:
+      - myproject/run/queue/cur
+      - myproject/run/queue/new
+      - myproject/run/queue/tmp
+      - myproject/run/rawspams
+      - myproject/run/undeliverable
+      - myproject/run/attachments
+    python_packages:
+      - PyYAML==5.3.1
+      - salmon-mail==3.2.0
+      - apscheduler==2.1.2
+      - inotify
+
+  tasks:
+    - name: Manually create the receiver virtualenv
+      command:
+        cmd: virtualenv "{{ local_home }}/salmon-honeypot/salmon-receiver" -p /usr/bin/python3
+        creates: "{{ local_home }}/salmon-honeypot/salmon-receiver"
+
+    - name: Install missing packages using pip
+      pip:
+        name: "{{ item }}"
+        virtualenv: "{{ local_home }}/salmon-honeypot/salmon-receiver"
+      loop: "{{ python_packages }}"
+
+    - block:
+        - name: Generate new project
+          shell: |
+            . {{ local_home }}/salmon-honeypot/salmon-receiver/bin/activate
+            salmon gen myproject
+          args:
+            chdir: "{{ local_home }}/salmon-honeypot/salmon-receiver"
+      rescue:
+        - name: Generate new project
+          shell: |
+            . {{ local_home }}/salmon-honeypot/salmon-receiver/bin/activate
+            salmon gen myproject -f
+          args:
+            chdir: "{{ local_home }}/salmon-honeypot/salmon-receiver"
+    
+    - name: Create necessary directories
+      file:
+        path: "{{ local_home }}/salmon-honeypot/salmon-receiver/{{ item }}"
+        state: directory
+        mode: 0755
+      loop: "{{ necessary_directories }}"
+
+    - name: Change file handler in logging.conf to WatchedFileHandler
+      replace:
+        path: "{{ local_home }}/salmon-honeypot/salmon-receiver/myproject/config/logging.conf"
+        regexp: 'class=FileHandler'
+        replace: 'class=logging.handlers.WatchedFileHandler'
+
+
+- name: Install salmon relay
+  hosts: honeypots
+  vars:
+    local_home: "{{ ansible_env.HOME }}"
+    python_packages:
+      - PyYAML==5.3.1
+      - salmon-mail==3.2.0
+      - apscheduler==2.1.2
+      - spacy
+      - ssdeep
+      - SQLAlchemy
+      - psutil
+      - pytest
+      - essential_generators
+      - scp
+      - PrettyTable
+      - git+https://github.com/avast/iottl-dracula.git
+
+  tasks:
+    - name: Check if relay already exists
+      file:
+        path: "{{ local_home }}/salmon-honeypot/salmon-relay"
+        state: absent
+      ignore_errors: yes
+
+    - name: Manually create the relay virtualenv
+      command:
+        cmd: virtualenv "{{ local_home }}/salmon-honeypot/salmon-relay" -p /usr/bin/python3
+        creates: "{{ local_home }}/salmon-honeypot/salmon-relay"
+
+    - name: Install missing packages using pip
+      pip:
+        name: "{{ item }}"
+        virtualenv: "{{ local_home }}/salmon-honeypot/salmon-relay"
+      loop: "{{ python_packages }}"
+
+    - name: Generate new project
+      shell: |
+        . {{ local_home }}/salmon-honeypot/salmon-relay/bin/activate
+        salmon gen myproject
+      args:
+        chdir: "{{ local_home }}/salmon-honeypot/salmon-relay"
+
+    - name: Download spacy models
+      shell: |
+        . {{ local_home }}/salmon-honeypot/salmon-relay/bin/activate
+        python3 -m spacy download en_core_web_sm
+
+    - name: Change logging level in logging.conf to INFO
+      replace:
+        path: "{{ local_home }}/salmon-honeypot/salmon-relay/myproject/config/logging.conf"
+        regexp: 'level=DEBUG'
+        replace: 'level=INFO'
+
+    - name: Change file handler in logging.conf to WatchedFileHandler
+      replace:
+        path: "{{ local_home }}/salmon-honeypot/salmon-relay/myproject/config/logging.conf"
+        regexp: 'class=FileHandler'
+        replace: 'class=logging.handlers.WatchedFileHandler'
+
+- name: Copy changed and new files in receiver
+  hosts: honeypots
+  vars:
+    local_home: "{{ ansible_env.HOME }}"
+
+  tasks:
+    - name: Copy queue.py, server.py, smtpd.py into salmon lib
+      command: |
+        cp -r "{{ local_home }}/salmon-honeypot-git/receiver/changed/{{ item }}" \
+        "{{ local_home }}/salmon-honeypot/salmon-receiver/lib/python3.7/site-packages/salmon/"
+      loop:
+        - queue.py
+        - server.py
+        - smtpd.py
+
+    - name: Copy handlers/queue.py into salmon lib
+      command: |
+        cp -r "{{ local_home }}/salmon-honeypot-git/receiver/changed/handlers/queue.py" \
+        "{{ local_home }}/salmon-honeypot/salmon-receiver/lib/python3.7/site-packages/salmon/handlers/"
+
+    - name: Copy boot.py, settings.py into config
+      command: |
+        cp -r "{{ local_home }}/salmon-honeypot-git/receiver/changed/{{ item }}" \
+        "{{ local_home }}/salmon-honeypot/salmon-receiver/myproject/config/"
+      loop:
+        - boot.py
+        - settings.py
+
+    - name: Copy sample.py into app/handlers
+      command: |
+        cp -r "{{ local_home }}/salmon-honeypot-git/receiver/changed/sample.py" \
+        "{{ local_home }}/salmon-honeypot/salmon-receiver/myproject/app/handlers/"
+
+    - name: Copy new_email_inotify.py into myproject/run
+      command: |
+        cp -r "{{ local_home }}/salmon-honeypot-git/receiver/new/new_email_inotify.py" \
+        "{{ local_home }}/salmon-honeypot/salmon-receiver/myproject/run/"
+
+    - name: Copy rules.json into configuration
+      command: |
+        cp -r "{{ local_home }}/salmon-honeypot-git/configuration/rules.json" \
+        "{{ local_home }}/salmon-honeypot/configuration/"
+
+
+- name: Copy changed and new files in relay
+  hosts: honeypots
+  vars:
+    local_home: "{{ ansible_env.HOME }}"
+
+  tasks:
+    - name: Copy queue.py, server.py, routing.py, mail.py into salmon lib
+      command: |
+        cp -r "{{ local_home }}/salmon-honeypot-git/relay/changed/{{ item }}" \
+        "{{ local_home }}/salmon-honeypot/salmon-relay/lib/python3.7/site-packages/salmon/"
+      loop:
+        - queue.py
+        - server.py
+        - routing.py
+        - mail.py
+
+    - name: Copy new files into salmon lib
+      command: |
+        cp -r "{{ local_home }}/salmon-honeypot-git/relay/new/{{ item }}" \
+        "{{ local_home }}/salmon-honeypot/salmon-relay/lib/python3.7/site-packages/salmon/"
+      loop:
+        - salmonconclude.py
+        - salmondb.py
+        - salmonmailparser.py
+        - salmonrelay.py
+        - salmonscheduler.py
+        - salmonspam.py
+        - base.py
+
+    - name: Copy boot.py, settings.py into config
+      command: |
+        cp -r "{{ local_home }}/salmon-honeypot-git/relay/changed/{{ item }}" \
+        "{{ local_home }}/salmon-honeypot/salmon-relay/myproject/config/"
+      loop:
+        - boot.py
+        - settings.py
+
+    - name: Copy sample.py into app/handlers
+      command: |
+        cp -r "{{ local_home }}/salmon-honeypot-git/relay/changed/sample.py" \
+        "{{ local_home }}/salmon-honeypot/salmon-relay/myproject/app/handlers/"
+
+    - name: Copy tests
+      command: |
+        cp -r "{{ local_home }}/salmon-honeypot-git/relay/new/tests" \
+        "{{ local_home }}/salmon-honeypot/salmon-relay/myproject/"
+
+    - name: Remove test_logging_relay.conf from tests directory
+      file:
+        path: "{{ local_home }}/salmon-honeypot/salmon-relay/myproject/tests/test_logging_relay.conf"
+        state: absent
+
+    - name: Copy test_logging_relay.conf into config
+      command: |
+        cp -r "{{ local_home }}/salmon-honeypot-git/relay/new/tests/test_logging_relay.conf" \
+        "{{ local_home }}/salmon-honeypot/salmon-relay/myproject/config/"
+
+    - name: Copy salmonerrornotifier.py into configuration
+      command: |
+        cp -r "{{ local_home }}/salmon-honeypot-git/relay/new/salmonerrornotifier.py" \
+        "{{ local_home }}/salmon-honeypot/configuration/"
+
+    - name: Copy statistics files into myproject
+      command: |
+        cp -r "{{ local_home }}/salmon-honeypot-git/{{ item }}" \
+        "{{ local_home }}/salmon-honeypot/salmon-relay/myproject/"
+      loop:
+        - print_statistics.py
+        - statistics.sh
+
+    - name: Copy test_honeypot_working.py into configuration
+      command: |
+        cp -r "{{ local_home }}/salmon-honeypot-git/test_honeypot_working.py" \
+        "{{ local_home }}/salmon-honeypot/configuration/"
+
+    - name: Copy salmondeleteold.py and salmondeleteold.sh into myproject
+      command: |
+        cp -r "{{ local_home }}/salmon-honeypot-git/relay/new/{{ item }}" \
+        "{{ local_home }}/salmon-honeypot/salmon-relay/myproject/"
+      loop:
+        - salmondeleteold.py
+        - salmondeleteold.sh
+
+
+- name: Finalizing installation
+  hosts: honeypots
+  vars:
+    local_home: "{{ ansible_env.HOME }}"
+  vars_prompt:
+    - name: error_msg_receiver
+      prompt: "Who will receive the error messages about a salmon crush?"
+      private: no
+    - name: listenhost
+      prompt: "Type salmon IP address (listenhost)"
+      private: no
+    - name: listenport
+      prompt: "Type salmon port (listenport)"
+      private: no
+      default: 25
+    - name: authenabled
+      prompt: "Do you wish to enable using credentials? (type yes or no)"
+      private: no
+      default: 'yes'
+    - name: username
+      prompt: "Type username or press enter if you don't want to use credentials"
+      private: no
+      default: 'changeme@test.cz'
+    - name: password
+      prompt: "Type password or press enter if you don't want to use credentials"
+      private: no
+      default: 'changeme'
+    - name: relay_enabled
+      prompt: "Do you wish to enable the relaying? (type yes or no)"
+      private: no
+      default: 'yes'
+    - name: save_eml
+      prompt: "Do you wish to save eml files? (type yes or no)"
+      private: no
+      default: 'yes'
+    - name: save_attachment
+      prompt: "Do you wish to save e-mail attachment? (type yes or no)"
+      private: no
+      default: 'yes'
+    - name: destroy_link
+      prompt: "Do you wish to destroy links in the e-mails? (type yes or no)"
+      private: no
+      default: 'no'
+    - name: destroy_attachment
+      prompt: "Do you wish to destroy attachment in the e-mails? (type yes or no)"
+      private: no
+      default: 'no'
+    - name: destroy_reply_to
+      prompt: "Do you wish to destroy reply-to in the e-mails? (type yes or no)"
+      private: no
+      default: 'no'
+    - name: save_statistics
+      prompt: "Do you wish to save statistics? (type yes or no)"
+      private: no
+      default: 'yes'
+
+  tasks:
+    - name: Remove git repository
+      file:
+        path: "{{ local_home }}/salmon-honeypot-git"
+        state: absent
+
+    - name: Render template for salmon.yaml
+      template:
+        src: salmon.j2
+        dest: "{{ local_home }}/salmon-honeypot/configuration/salmon.yaml"
+
+    - name: Start receiver
+      shell: salmon-receiver start
+      register: receiver_result
+
+    - debug:
+        msg: Receiver started successfully
+      when: receiver_result.rc == 0
+
+    - name: Start relay
+      shell: salmon-relay start
+      register: relay_result
+
+    - debug:
+        msg: Relay started successfully
+      when: relay_result.rc == 0

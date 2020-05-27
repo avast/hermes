@@ -1,0 +1,65 @@
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="===============2564335580883764674=="
+Subject: HTML message with attachments
+From: test@test.cz
+To: test@test.cz
+reply-to: test
+
+--===============2564335580883764674==
+Content-Type: multipart/alternative;
+ boundary="===============3387508669212657742=="
+
+--===============3387508669212657742==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+This is a text message changeme
+
+--===============3387508669212657742==
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+
+<html>
+  <head></head>
+  <body>
+    <p>Hello changeme www.test.cz</p>
+    <p>
+		Here is an example of sending attachments in email using Python.        
+    </p>
+  </body>
+</html>
+
+--===============3387508669212657742==--
+
+--===============2564335580883764674==
+Content-Type: application/msword
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="my_attach.doc"
+MIME-Version: 1.0
+
+TG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQsIGNvbnNlY3RldHVlciBhZGlwaXNjaW5nIGVsaXQu
+IE51bGxhIG5vbiBhcmN1IGxhY2luaWEgbmVxdWUgZmF1Y2lidXMgZnJpbmdpbGxhLiBOdWxsYSBw
+dWx2aW5hciBlbGVpZmVuZCBzZW0uIE5hbSBsaWJlcm8gdGVtcG9yZSwgY3VtIHNvbHV0YSBub2Jp
+cyBlc3QgZWxpZ2VuZGkgb3B0aW8gY3VtcXVlIG5paGlsIGltcGVkaXQgcXVvIG1pbnVzIGlkIHF1
+b2QgbWF4aW1lIHBsYWNlYXQgZmFjZXJlIHBvc3NpbXVzLCBvbW5pcyB2b2x1cHRhcyBhc3N1bWVu
+ZGEgZXN0LCBvbW5pcyBkb2xvciByZXBlbGxlbmR1cy4gQ3JhcyBwZWRlIGxpYmVybywgZGFwaWJ1
+cyBuZWMsIHByZXRpdW0gc2l0IGFtZXQsIHRlbXBvciBxdWlzLiBVdCBlbmltIGFkIG1pbmltIHZl
+bmlhbSwgcXVpcyBub3N0cnVkIGV4ZXJjaXRhdGlvbiB1bGxhbWNvIGxhYm9yaXMgbmlzaSB1dCBh
+bGlxdWlwIGV4IGVhIGNvbW1vZG8gY29uc2VxdWF0LiBQcm9pbiBtYXR0aXMgbGFjaW5pYSBqdXN0
+by4gQWxpcXVhbSBhbnRlLiBBbGlxdWFtIGlkIGRvbG9yLiBOYW0gbGliZXJvIHRlbXBvcmUsIGN1
+bSBzb2x1dGEgbm9iaXMgZXN0IGVsaWdlbmRpIG9wdGlvIGN1bXF1ZSBuaWhpbCBpbXBlZGl0IHF1
+byBtaW51cyBpZCBxdW9kIG1heGltZSBwbGFjZWF0IGZhY2VyZSBwb3NzaW11cywgb21uaXMgdm9s
+dXB0YXMgYXNzdW1lbmRhIGVzdCwgb21uaXMgZG9sb3IgcmVwZWxsZW5kdXMuIER1aXMgY29uZGlt
+ZW50dW0gYXVndWUgaWQgbWFnbmEgc2VtcGVyIHJ1dHJ1bS4gTnVsbGEgYWNjdW1zYW4sIGVsaXQg
+c2l0IGFtZXQgdmFyaXVzIHNlbXBlciwgbnVsbGEgbWF1cmlzIG1vbGxpcyBxdWFtLCB0ZW1wb3Ig
+c3VzY2lwaXQgZGlhbSBudWxsYSB2ZWwgbGVvLiBEdWlzIGFudGUgb3JjaSwgbW9sZXN0aWUgdml0
+YWUgdmVoaWN1bGEgdmVuZW5hdGlzLCB0aW5jaWR1bnQgYWMgcGVkZS4gTW9yYmkgaW1wZXJkaWV0
+LCBtYXVyaXMgYWMgYXVjdG9yIGRpY3R1bSwgbmlzbCBsaWd1bGEgZWdlc3RhcyBudWxsYSwgZXQg
+c29sbGljaXR1ZGluIHNlbSBwdXJ1cyBpbiBsYWN1cy4gTnVsbGEgZXN0LiBEdWlzIGF1dGUgaXJ1
+cmUgZG9sb3IgaW4gcmVwcmVoZW5kZXJpdCBpbiB2b2x1cHRhdGUgdmVsaXQgZXNzZSBjaWxsdW0g
+ZG9sb3JlIGV1IGZ1Z2lhdCBudWxsYSBwYXJpYXR1ci4gSW50ZWdlciB2dWxwdXRhdGUgc2VtIGEg
+bmliaCBydXRydW0gY29uc2VxdWF0LiBDdXJhYml0dXIgdml0YWUgZGlhbSBub24gZW5pbSB2ZXN0
+aWJ1bHVtIGludGVyZHVtLgo=
+
+--===============2564335580883764674==--

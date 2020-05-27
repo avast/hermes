@@ -1,0 +1,45 @@
+[
+  {
+    "name": "example 1",
+    "AND": [
+        {
+            "field": "body_plain",
+            "pattern": "example body_plain"
+        },
+        {
+            "field": "subject",
+            "pattern": "example subject"
+        },
+        {
+            "field": "attachment",
+            "pattern": false
+        }
+    ]
+  },
+  {
+    "name": "example 2 - password in body_plain",
+    "field": "body_plain",
+    "pattern": "([A-Z]+:smtp:\/\/m@l.ml\\|leading.ml:25\\|m@l.ml\\|changeme)"
+  },
+  {
+    "name": "example 3 - more complex rule",
+    "OR": [
+      {
+        "field": "body_plain",
+        "pattern": "(example body_plain|example body)"
+      },
+      {
+        "AND": [
+          {
+            "field": "subject",
+            "pattern": "example subject"
+          },
+          {
+            "field": "body_html",
+            "pattern": "example body_html"
+          }
+        ]
+      }
+    ]
+  }
+]

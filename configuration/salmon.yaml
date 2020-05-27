@@ -1,0 +1,38 @@
+global:
+    router_defaults: {'host': '.+'}
+    handlers: ['app.handlers.sample']
+    error_msg_sender: 'salmon@info.com'
+    error_msg_receiver: 'salmon@info.com'
+
+receiver:
+    listenhost: 127.0.0.1
+    listenport: 2525
+    sensorname: salmon
+    authenabled: False
+    credentials: [(changeme@test.cz, changeme), (changeme@test.cz, changeme2)]
+
+relay:
+    globalcounter: 2
+    schedulertime: 10
+    # if you change relayhost and relayport here, 
+    # you will have to change it in file /etc/exim4/exim4.conf.template too
+    relayhost: 127.0.0.1
+    relayport: 2500
+    relay_enabled: True
+    save_eml: True
+    save_attachment: True
+    destroy_link: False
+    destroy_attachment: False
+    destroy_reply_to: False
+    save_statistics: False
+    use_rule_file: False
+    analyze_text: False
+    mqtt: False
+    # if you set mqtt to True, it is necessary to set all of the following variables
+    mqtt_server: 'mqtt_server_url'
+    mqtt_destination_ip: 127.0.0.1
+    mqtt_username: 'mqtt_username'
+    mqtt_password: 'mqtt_password'
+    eml_msg_topic: 'eml_msg_topic'
+    global_msg_topic: 'global_msg_topic'
+    mqtt_honeypot: 'mqtt_honeypot'
