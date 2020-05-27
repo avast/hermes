@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DIRECTORY="salmon-honeypot"
+DIRECTORY="hermes"
 GREEN='\e[32m'
 RED='\033[0;31m'
 NOCOLOR='\033[0m'

@@ -79,16 +79,16 @@
   vars:
     local_home: "{{ ansible_env.HOME }}"
     lp_logrotate_confd:
-      - path: "salmon"
+      - path: "hermes"
         conf: |
-          {{ local_home }}/salmon-honeypot/salmon-receiver/myproject/logs/salmon.log {
+          {{ local_home }}/hermes/salmon-receiver/myproject/logs/salmon.log {
                  daily
                  rotate 10
                  size 100M
                  compress
                  delaycompress
           }
-          {{ local_home }}/salmon-honeypot/salmon-relay/myproject/logs/salmon.log {
+          {{ local_home }}/hermes/salmon-relay/myproject/logs/salmon.log {
                  daily
                  rotate 10
                  size 100M
@@ -103,26 +103,26 @@
         state: directory
         mode: 0755
 
-    - name: Create a directory $HOME/salmon-honeypot
+    - name: Create a directory $HOME/hermes
       file:
-        path: "{{ local_home }}/salmon-honeypot"
+        path: "{{ local_home }}/hermes"
         state: directory
         mode: 0755
 
-    - name: Create a directory $HOME/salmon-honeypot/configuration
+    - name: Create a directory $HOME/hermes/configuration
       file:
-        path: "{{ local_home }}/salmon-honeypot/configuration"
+        path: "{{ local_home }}/hermes/configuration"
         state: directory
         mode: 0755
     
-    - name: Clone a repository into $HOME/salmon-honeypot-git
+    - name: Clone a repository into $HOME/hermes-git
       git:
         repo: https://github.com/avast/hermes
         version: master
-        dest: "{{ local_home }}/salmon-honeypot-git"
+        dest: "{{ local_home }}/hermes-git"
 
     - name: Copy salmon-receiver.sh and salmon-relay.sh into $HOME/bin
-      command: cp -r "{{ local_home }}/salmon-honeypot-git/configuration/{{ item }}" "{{ local_home }}/bin"
+      command: cp -r "{{ local_home }}/hermes-git/configuration/{{ item }}" "{{ local_home }}/bin"
       loop:
         - salmon-receiver.sh
         - salmon-relay.sh
@@ -168,14 +168,14 @@
         name: "check if salmon is running"
         minute: "0"
         hour: "9"
-        job: "{{ local_home }}/salmon-honeypot/configuration/salmonerrornotifier.py"
+        job: "{{ local_home }}/hermes/configuration/salmonerrornotifier.py"
 
     - name: Create cron job for salmondeleteold
       cron:
         name: "delete old records from maybe_test_emails table"
         minute: "0"
         hour: "10"
-        job: "{{ local_home }}/salmon-honeypot/salmon-relay/myproject/salmondeleteold.sh"
+        job: "{{ local_home }}/hermes/salmon-relay/myproject/salmondeleteold.sh"
 
     - name: Setup Logrotate for salmon logs
       blockinfile:
@@ -205,40 +205,40 @@
   tasks:
     - name: Manually create the receiver virtualenv
       command:
-        cmd: virtualenv "{{ local_home }}/salmon-honeypot/salmon-receiver" -p /usr/bin/python3
-        creates: "{{ local_home }}/salmon-honeypot/salmon-receiver"
+        cmd: virtualenv "{{ local_home }}/hermes/salmon-receiver" -p /usr/bin/python3
+        creates: "{{ local_home }}/hermes/salmon-receiver"
 
     - name: Install missing packages using pip
       pip:
         name: "{{ item }}"
-        virtualenv: "{{ local_home }}/salmon-honeypot/salmon-receiver"
+        virtualenv: "{{ local_home }}/hermes/salmon-receiver"
       loop: "{{ python_packages }}"
 
     - block:
         - name: Generate new project
           shell: |
-            . {{ local_home }}/salmon-honeypot/salmon-receiver/bin/activate
+            . {{ local_home }}/hermes/salmon-receiver/bin/activate
             salmon gen myproject
           args:
-            chdir: "{{ local_home }}/salmon-honeypot/salmon-receiver"
+            chdir: "{{ local_home }}/hermes/salmon-receiver"
       rescue:
         - name: Generate new project
           shell: |
-            . {{ local_home }}/salmon-honeypot/salmon-receiver/bin/activate
+            . {{ local_home }}/hermes/salmon-receiver/bin/activate
             salmon gen myproject -f
           args:
-            chdir: "{{ local_home }}/salmon-honeypot/salmon-receiver"
+            chdir: "{{ local_home }}/hermes/salmon-receiver"
     
     - name: Create necessary directories
       file:
-        path: "{{ local_home }}/salmon-honeypot/salmon-receiver/{{ item }}"
+        path: "{{ local_home }}/hermes/salmon-receiver/{{ item }}"
         state: directory
         mode: 0755
       loop: "{{ necessary_directories }}"
 
     - name: Change file handler in logging.conf to WatchedFileHandler
       replace:
-        path: "{{ local_home }}/salmon-honeypot/salmon-receiver/myproject/config/logging.conf"
+        path: "{{ local_home }}/hermes/salmon-receiver/myproject/config/logging.conf"
         regexp: 'class=FileHandler'
         replace: 'class=logging.handlers.WatchedFileHandler'
 
@@ -264,42 +264,42 @@
   tasks:
     - name: Check if relay already exists
       file:
-        path: "{{ local_home }}/salmon-honeypot/salmon-relay"
+        path: "{{ local_home }}/hermes/salmon-relay"
         state: absent
       ignore_errors: yes
 
     - name: Manually create the relay virtualenv
       command:
-        cmd: virtualenv "{{ local_home }}/salmon-honeypot/salmon-relay" -p /usr/bin/python3
-        creates: "{{ local_home }}/salmon-honeypot/salmon-relay"
+        cmd: virtualenv "{{ local_home }}/hermes/salmon-relay" -p /usr/bin/python3
+        creates: "{{ local_home }}/hermes/salmon-relay"
 
     - name: Install missing packages using pip
       pip:
         name: "{{ item }}"
-        virtualenv: "{{ local_home }}/salmon-honeypot/salmon-relay"
+        virtualenv: "{{ local_home }}/hermes/salmon-relay"
       loop: "{{ python_packages }}"
 
     - name: Generate new project
       shell: |
-        . {{ local_home }}/salmon-honeypot/salmon-relay/bin/activate
+        . {{ local_home }}/hermes/salmon-relay/bin/activate
         salmon gen myproject
       args:
-        chdir: "{{ local_home }}/salmon-honeypot/salmon-relay"
+        chdir: "{{ local_home }}/hermes/salmon-relay"
 
     - name: Download spacy models
       shell: |
-        . {{ local_home }}/salmon-honeypot/salmon-relay/bin/activate
+        . {{ local_home }}/hermes/salmon-relay/bin/activate
         python3 -m spacy download en_core_web_sm
 
     - name: Change logging level in logging.conf to INFO
       replace:
-        path: "{{ local_home }}/salmon-honeypot/salmon-relay/myproject/config/logging.conf"
+        path: "{{ local_home }}/hermes/salmon-relay/myproject/config/logging.conf"
         regexp: 'level=DEBUG'
         replace: 'level=INFO'
 
     - name: Change file handler in logging.conf to WatchedFileHandler
       replace:
-        path: "{{ local_home }}/salmon-honeypot/salmon-relay/myproject/config/logging.conf"
+        path: "{{ local_home }}/hermes/salmon-relay/myproject/config/logging.conf"
         regexp: 'class=FileHandler'
         replace: 'class=logging.handlers.WatchedFileHandler'
 
@@ -311,8 +311,8 @@
   tasks:
     - name: Copy queue.py, server.py, smtpd.py into salmon lib
       command: |
-        cp -r "{{ local_home }}/salmon-honeypot-git/receiver/changed/{{ item }}" \
-        "{{ local_home }}/salmon-honeypot/salmon-receiver/lib/python3.7/site-packages/salmon/"
+        cp -r "{{ local_home }}/hermes-git/receiver/changed/{{ item }}" \
+        "{{ local_home }}/hermes/salmon-receiver/lib/python3.7/site-packages/salmon/"
       loop:
         - queue.py
         - server.py
@@ -320,31 +320,31 @@
 
     - name: Copy handlers/queue.py into salmon lib
       command: |
-        cp -r "{{ local_home }}/salmon-honeypot-git/receiver/changed/handlers/queue.py" \
-        "{{ local_home }}/salmon-honeypot/salmon-receiver/lib/python3.7/site-packages/salmon/handlers/"
+        cp -r "{{ local_home }}/hermes-git/receiver/changed/handlers/queue.py" \
+        "{{ local_home }}/hermes/salmon-receiver/lib/python3.7/site-packages/salmon/handlers/"
 
     - name: Copy boot.py, settings.py into config
       command: |
-        cp -r "{{ local_home }}/salmon-honeypot-git/receiver/changed/{{ item }}" \
-        "{{ local_home }}/salmon-honeypot/salmon-receiver/myproject/config/"
+        cp -r "{{ local_home }}/hermes-git/receiver/changed/{{ item }}" \
+        "{{ local_home }}/hermes/salmon-receiver/myproject/config/"
       loop:
         - boot.py
         - settings.py
 
     - name: Copy sample.py into app/handlers
       command: |
-        cp -r "{{ local_home }}/salmon-honeypot-git/receiver/changed/sample.py" \
-        "{{ local_home }}/salmon-honeypot/salmon-receiver/myproject/app/handlers/"
+        cp -r "{{ local_home }}/hermes-git/receiver/changed/sample.py" \
+        "{{ local_home }}/hermes/salmon-receiver/myproject/app/handlers/"
 
     - name: Copy new_email_inotify.py into myproject/run
       command: |
-        cp -r "{{ local_home }}/salmon-honeypot-git/receiver/new/new_email_inotify.py" \
-        "{{ local_home }}/salmon-honeypot/salmon-receiver/myproject/run/"
+        cp -r "{{ local_home }}/hermes-git/receiver/new/new_email_inotify.py" \
+        "{{ local_home }}/hermes/salmon-receiver/myproject/run/"
 
     - name: Copy rules.json into configuration
       command: |
-        cp -r "{{ local_home }}/salmon-honeypot-git/configuration/rules.json" \
-        "{{ local_home }}/salmon-honeypot/configuration/"
+        cp -r "{{ local_home }}/hermes-git/configuration/rules.json" \
+        "{{ local_home }}/hermes/configuration/"
 
 
 - name: Copy changed and new files in relay
@@ -355,8 +355,8 @@
   tasks:
     - name: Copy queue.py, server.py, routing.py, mail.py into salmon lib
       command: |
-        cp -r "{{ local_home }}/salmon-honeypot-git/relay/changed/{{ item }}" \
-        "{{ local_home }}/salmon-honeypot/salmon-relay/lib/python3.7/site-packages/salmon/"
+        cp -r "{{ local_home }}/hermes-git/relay/changed/{{ item }}" \
+        "{{ local_home }}/hermes/salmon-relay/lib/python3.7/site-packages/salmon/"
       loop:
         - queue.py
         - server.py
@@ -365,8 +365,8 @@
 
     - name: Copy new files into salmon lib
       command: |
-        cp -r "{{ local_home }}/salmon-honeypot-git/relay/new/{{ item }}" \
-        "{{ local_home }}/salmon-honeypot/salmon-relay/lib/python3.7/site-packages/salmon/"
+        cp -r "{{ local_home }}/hermes-git/relay/new/{{ item }}" \
+        "{{ local_home }}/hermes/salmon-relay/lib/python3.7/site-packages/salmon/"
       loop:
         - salmonconclude.py
         - salmondb.py
@@ -378,54 +378,54 @@
 
     - name: Copy boot.py, settings.py into config
       command: |
-        cp -r "{{ local_home }}/salmon-honeypot-git/relay/changed/{{ item }}" \
-        "{{ local_home }}/salmon-honeypot/salmon-relay/myproject/config/"
+        cp -r "{{ local_home }}/hermes-git/relay/changed/{{ item }}" \
+        "{{ local_home }}/hermes/salmon-relay/myproject/config/"
       loop:
         - boot.py
         - settings.py
 
     - name: Copy sample.py into app/handlers
       command: |
-        cp -r "{{ local_home }}/salmon-honeypot-git/relay/changed/sample.py" \
-        "{{ local_home }}/salmon-honeypot/salmon-relay/myproject/app/handlers/"
+        cp -r "{{ local_home }}/hermes-git/relay/changed/sample.py" \
+        "{{ local_home }}/hermes/salmon-relay/myproject/app/handlers/"
 
     - name: Copy tests
       command: |
-        cp -r "{{ local_home }}/salmon-honeypot-git/relay/new/tests" \
-        "{{ local_home }}/salmon-honeypot/salmon-relay/myproject/"
+        cp -r "{{ local_home }}/hermes-git/relay/new/tests" \
+        "{{ local_home }}/hermes/salmon-relay/myproject/"
 
     - name: Remove test_logging_relay.conf from tests directory
       file:
-        path: "{{ local_home }}/salmon-honeypot/salmon-relay/myproject/tests/test_logging_relay.conf"
+        path: "{{ local_home }}/hermes/salmon-relay/myproject/tests/test_logging_relay.conf"
         state: absent
 
     - name: Copy test_logging_relay.conf into config
       command: |
-        cp -r "{{ local_home }}/salmon-honeypot-git/relay/new/tests/test_logging_relay.conf" \
-        "{{ local_home }}/salmon-honeypot/salmon-relay/myproject/config/"
+        cp -r "{{ local_home }}/hermes-git/relay/new/tests/test_logging_relay.conf" \
+        "{{ local_home }}/hermes/salmon-relay/myproject/config/"
 
     - name: Copy salmonerrornotifier.py into configuration
       command: |
-        cp -r "{{ local_home }}/salmon-honeypot-git/relay/new/salmonerrornotifier.py" \
-        "{{ local_home }}/salmon-honeypot/configuration/"
+        cp -r "{{ local_home }}/hermes-git/relay/new/salmonerrornotifier.py" \
+        "{{ local_home }}/hermes/configuration/"
 
     - name: Copy statistics files into myproject
       command: |
-        cp -r "{{ local_home }}/salmon-honeypot-git/{{ item }}" \
-        "{{ local_home }}/salmon-honeypot/salmon-relay/myproject/"
+        cp -r "{{ local_home }}/hermes-git/{{ item }}" \
+        "{{ local_home }}/hermes/salmon-relay/myproject/"
       loop:
         - print_statistics.py
         - statistics.sh
 
     - name: Copy test_honeypot_working.py into configuration
       command: |
-        cp -r "{{ local_home }}/salmon-honeypot-git/test_honeypot_working.py" \
-        "{{ local_home }}/salmon-honeypot/configuration/"
+        cp -r "{{ local_home }}/hermes-git/test_honeypot_working.py" \
+        "{{ local_home }}/hermes/configuration/"
 
     - name: Copy salmondeleteold.py and salmondeleteold.sh into myproject
       command: |
-        cp -r "{{ local_home }}/salmon-honeypot-git/relay/new/{{ item }}" \
-        "{{ local_home }}/salmon-honeypot/salmon-relay/myproject/"
+        cp -r "{{ local_home }}/hermes-git/relay/new/{{ item }}" \
+        "{{ local_home }}/hermes/salmon-relay/myproject/"
       loop:
         - salmondeleteold.py
         - salmondeleteold.sh
@@ -490,13 +490,13 @@
   tasks:
     - name: Remove git repository
       file:
-        path: "{{ local_home }}/salmon-honeypot-git"
+        path: "{{ local_home }}/hermes-git"
         state: absent
 
     - name: Render template for salmon.yaml
       template:
         src: salmon.j2
-        dest: "{{ local_home }}/salmon-honeypot/configuration/salmon.yaml"
+        dest: "{{ local_home }}/hermes/configuration/salmon.yaml"
 
     - name: Start receiver
       shell: salmon-receiver start

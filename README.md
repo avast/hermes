@@ -2,7 +2,7 @@
 Hermes is an SMTP honeypot built on top of the Salmon mail server (https://pypi.org/project/salmon-mail/). It has all the features of Salmon, but our code has been added to create a honeypot so it is now only used as an SMTP server and it is not reasonable to use it like anything else.
 
 ## Features
-All hermes features can be set in the `configuration/salmon.yaml` configuration file, which is located in the `salmon-honeypot/configuration/` path after installation. If you decide to install honeypot using Ansible playbook, this file is created interactively.
+All hermes features can be set in the `configuration/salmon.yaml` configuration file, which is located in the `hermes/configuration/` path after installation. If you decide to install honeypot using Ansible playbook, this file is created interactively.
 
 * Honeypot supports Python 3.
 * Periodic inspection that the honeypot is running.
@@ -25,7 +25,7 @@ Honeypot can be installed using a shell script in `configuration/install.sh`. Th
 
 The path is either a relative or absolute path to the directory where the honeypot is to be installed. The directory must already exist.
 The script is primarily intended for users who do not have Ansible installed. The script assumes that the honeypot doesn't exist before the script is run. You must also clone the source repository first.
-After installation, it's up to you if you want to have two cron jobs to delete old records from the maybe_test_emails table and to check that the honeypot is running. It is also highly recommended to use logrotate because salmon-honeypot logs can be large after some time. By default, the debug level is set to DEBUG in `salmon-honeypot/salmon-relay/myproject/config/logging.conf` after installation. I recommend changing the level to INFO or the salmon.log file will be very long very soon. Also add on line 12 helo_data = hermes to the file /etc/exim4/conf.d/transport/30_exim4-config_remote_smtp. The ansible playbook takes care of this itself.
+After installation, it's up to you if you want to have two cron jobs to delete old records from the maybe_test_emails table and to check that the honeypot is running. It is also highly recommended to use logrotate because hermes logs can be large after some time. By default, the debug level is set to DEBUG in `hermes/salmon-relay/myproject/config/logging.conf` after installation. I recommend changing the level to INFO or the salmon.log file will be very long very soon. Also add on line 12 helo_data = hermes to the file /etc/exim4/conf.d/transport/30_exim4-config_remote_smtp. The ansible playbook takes care of this itself.
 
 ### Ansible
 Honeypot can be installed using the Ansible playbook in `ansible/honeypot.yml`.
@@ -55,10 +55,10 @@ Run playbook as:
     ansible-playbook honeypot.yml
 
 You will be prompt to type the password for the remote host. At the end of the installation you will need to type some specifications for `salmon.yaml`.
-The playbook will add two cron jobs (see `crontab -e`) and it will add a logrotate setting to `/etc/logrotate.d/salmon`.
+The playbook will add two cron jobs (see `crontab -e`) and it will add a logrotate setting to `/etc/logrotate.d/hermes`.
 If you want to log on to the remote host other than as root, you must change `remote_user = root` to `remote_user = your_user` and `become_ask_pass = false` to `become_ask_pass = true` in the `ansible.cfg` file.
 
-If you want to run a program that checks the `run/queue` directory for incoming e-mails, go to `salmon-honeypot/salmon-receiver/myproject/run/` after installation and run:
+If you want to run a program that checks the `run/queue` directory for incoming e-mails, go to `hermes/salmon-receiver/myproject/run/` after installation and run:
 
     python3 new_email_inotify.py -r <your_email_address>
 
@@ -80,14 +80,14 @@ or if you want to test only 10 e-mails in the directory
 
     python3 test_permeability.py -p "<absolute_path_to_directory_with_eml>" -n 10
 
-There is also a test `test_honeypot_working.py` located in the directory `salmon-honeypot/configuration/` after installation. This test will try to send an e-mail using salmon-honeypot and then check your inbox to see if the e-mail has arrived. Run as:
+There is also a test `test_honeypot_working.py` located in the directory `hermes/configuration/` after installation. This test will try to send an e-mail using hermes and then check your inbox to see if the e-mail has arrived. Run as:
 
     python3 test_honeypot_working.py --listenhost "<IP_of_salmon_receiver>" --listenport <port_of_salmon_receiver> --recipient "<your_email_address>" --password "<your_password>"
 
 By default it uses `imap.seznam.cz` imap server so if you want to use e-mail address from another account, you have to specify another imap server using `--imap "<imap_server>"`.
 
 ## Statistics
-See honeypot statistics after installation in `salmon-honeypot/salmon-relay/myproject`:
+See honeypot statistics after installation in `hermes/salmon-relay/myproject`:
 
-    cd salmon-honeypot/salmon-relay/myproject
+    cd hermes/salmon-relay/myproject
     ./statistics.sh

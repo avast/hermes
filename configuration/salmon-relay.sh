@@ -2,7 +2,7 @@
 
 cd $HOME
 
-salmon_directory=`find -name salmon-honeypot -print -quit`
+salmon_directory=`find -name hermes -print -quit`
 cd $salmon_directory/salmon-relay/
 . bin/activate
 cd myproject/
