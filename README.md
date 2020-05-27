@@ -25,7 +25,7 @@ Honeypot can be installed using a shell script in `configuration/install.sh`. Th
 
 The path is either a relative or absolute path to the directory where the honeypot is to be installed. The directory must already exist.
 The script is primarily intended for users who do not have Ansible installed. The script assumes that the honeypot doesn't exist before the script is run. You must also clone the source repository first.
-After installation, it's up to you if you want to have two cron jobs to delete old records from the maybe_test_emails table and to check that the honeypot is running. It is also highly recommended to use logrotate because hermes logs can be large after some time. By default, the debug level is set to DEBUG in `hermes/salmon-relay/myproject/config/logging.conf` after installation. I recommend changing the level to INFO or the salmon.log file will be very long very soon. Also add on line 12 helo_data = hermes to the file /etc/exim4/conf.d/transport/30_exim4-config_remote_smtp. The ansible playbook takes care of this itself.
+After installation, it's up to you if you want to have two cron jobs to delete old records from the maybe_test_emails table and to check that the honeypot is running. It is also highly recommended to use logrotate because hermes logs can be large after some time. By default, the debug level is set to DEBUG in `hermes/salmon-relay/myproject/config/logging.conf` after installation. I recommend changing the level to INFO or the salmon.log file will be very long very soon. Also add on line 12 helo_data = hermes.server.com to the file /etc/exim4/conf.d/transport/30_exim4-config_remote_smtp. The ansible playbook takes care of this itself.
 
 ### Ansible
 Honeypot can be installed using the Ansible playbook in `ansible/honeypot.yml`.
@@ -56,7 +56,7 @@ Run playbook as:
 
 You will be prompt to type the password for the remote host. At the end of the installation you will need to type some specifications for `salmon.yaml`.
 The playbook will add two cron jobs (see `crontab -e`) and it will add a logrotate setting to `/etc/logrotate.d/hermes`.
-If you want to log on to the remote host other than as root, you must change `remote_user = root` to `remote_user = your_user` and `become_ask_pass = false` to `become_ask_pass = true` in the `ansible.cfg` file.
+If you want to log on to the remote host other than as root, you must change `remote_user = root` to `remote_user = your_user` and `become_ask_pass = false` to `become_ask_pass = true` in the `ansible.cfg` file. Please note that if the remote_user was changed, hermes was still installed in `/root`, otherwise it would not be possible to run the honeypot on port 25. You will need to run commands `salmon-receiver <start|stop|restart>` and  `salmon-relay <start|stop|restart>` with sudo.
 
 If you want to run a program that checks the `run/queue` directory for incoming e-mails, go to `hermes/salmon-receiver/myproject/run/` after installation and run:
 

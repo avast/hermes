@@ -48,9 +48,9 @@
     - name: Add helo_data into /etc/exim4/conf.d/transport/30_exim4-config_remote_smtp
       lineinfile:
         path: /etc/exim4/conf.d/transport/30_exim4-config_remote_smtp
-        regexp: '  helo_data = hermes'
+        regexp: '  helo_data = hermes.server.com'
         insertafter: '  driver = smtp'
-        line: '  helo_data = hermes'
+        line: '  helo_data = hermes.server.com'
       notify:
         - restart exim
     
@@ -155,7 +155,7 @@
 
     - name: Install PyYAML
       pip:
-        name: PyYAML==5.3.1
+        name: PyYAML
         executable: pip3
     
     - name: Install psutil
@@ -197,7 +197,7 @@
       - myproject/run/undeliverable
       - myproject/run/attachments
     python_packages:
-      - PyYAML==5.3.1
+      - PyYAML
       - salmon-mail==3.2.0
       - apscheduler==2.1.2
       - inotify
@@ -248,7 +248,7 @@
   vars:
     local_home: "{{ ansible_env.HOME }}"
     python_packages:
-      - PyYAML==5.3.1
+      - PyYAML
       - salmon-mail==3.2.0
       - apscheduler==2.1.2
       - spacy
