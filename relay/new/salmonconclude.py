@@ -199,7 +199,7 @@ def recipient_in_testmail(spam):
     """Function writes information about the email recipient to the log file.
 
     Args:
-        spam (Spam): Instance of class Spam.
+        spam (Spam): Instance of the Spam class.
     """
     logging.info(
         "[+] (salmonconclude.py) - The recipient was used in a 100% test email, so this is a test email."
@@ -220,7 +220,7 @@ def push_into_db_maybetesting(records, spam, can_push, mail_fields, recipient, s
         can_push (bool): Decide if the email can be pushed into the database.
         mail_fields (MailFields): Database model of parsed email fields.
         recipient (Recipient): List of instances of the Recipient class.
-        sender (Sender): Instance of class Sender.
+        sender (Sender): Instance of the Sender class.
     """
     for record in records:
         if (spam.rating < 70 and spam.rating >= 50) or isinstance(record, MaybeTestMail):
@@ -266,10 +266,10 @@ def push_into_db_testing(records, spam, mail_fields, recipient, sender):
 
     Args:
         records (list): List of similar records.
-        spam (Spam): The instance of class Spam.
+        spam (Spam): Instance of the Spam class.
         mail_fields (MailFields): Database model of parsed email fields.
-        recipient (Recipient): List of instances of class Recipient.
-        sender (Sender): The instance of class Sender.
+        recipient (Recipient): List of instances of the Recipient class.
+        sender (Sender): Instance of the Sender class.
     """
     for record in records:
         if spam.rating >= 70 or isinstance(record, TestMail):

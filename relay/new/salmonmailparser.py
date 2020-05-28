@@ -217,8 +217,11 @@ def process_email_parts_recursively(msg, mail_fields):
                 msg["Content-Transfer-Encoding"] == "quoted-printable"
                 or msg["Content-Transfer-Encoding"] == "8bit"
             ):
-                decoded_string = quopri.decodestring(msg.get_payload())
-                mail_fields["text"] = decoded_string.decode("utf-8")
+                try:
+                    decoded_string = quopri.decodestring(msg.get_payload())
+                    mail_fields["text"] = decoded_string.decode("utf-8")
+                except UnicodeDecodeError as e:
+                    mail_fields["text"] = msg.get_payload()
                 logging.debug("[+] (salmonmailparser.py) - text/plain encoded in quoted-printable.")
             elif msg["Content-Transfer-Encoding"] == "binary":
                 logging.debug("[+] (salmonmailparser.py) - text/plain encoded in binary.")
