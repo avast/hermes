@@ -118,7 +118,7 @@
     - name: Clone a repository into $HOME/hermes-git
       git:
         repo: https://github.com/avast/hermes
-        version: master
+        version: odevzdani
         dest: "{{ local_home }}/hermes-git"
 
     - name: Copy salmon-receiver.sh and salmon-relay.sh into $HOME/bin
