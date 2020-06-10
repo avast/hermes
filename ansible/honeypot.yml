@@ -331,8 +331,8 @@
   tasks:
     - name: Copy queue.py, server.py, smtpd.py into salmon lib
       command: |
-        cp -r "{{ local_home }}/hermes-git/receiver/changed/{{ item }}" \
-        "{{ local_home }}/hermes/salmon-receiver/lib/python3.7/site-packages/salmon/"
+        /bin/sh -c 'cp -r {{ local_home }}/hermes-git/receiver/changed/{{ item }} \
+        {{ local_home }}/hermes/salmon-receiver/lib/python3.*/site-packages/salmon/'
       loop:
         - queue.py
         - server.py
@@ -340,8 +340,8 @@
 
     - name: Copy handlers/queue.py into salmon lib
       command: |
-        cp -r "{{ local_home }}/hermes-git/receiver/changed/handlers/queue.py" \
-        "{{ local_home }}/hermes/salmon-receiver/lib/python3.7/site-packages/salmon/handlers/"
+        /bin/sh -c 'cp -r {{ local_home }}/hermes-git/receiver/changed/handlers/queue.py \
+        {{ local_home }}/hermes/salmon-receiver/lib/python3.*/site-packages/salmon/handlers/'
 
     - name: Copy boot.py, settings.py into config
       command: |
@@ -375,8 +375,8 @@
   tasks:
     - name: Copy queue.py, server.py, routing.py, mail.py into salmon lib
       command: |
-        cp -r "{{ local_home }}/hermes-git/relay/changed/{{ item }}" \
-        "{{ local_home }}/hermes/salmon-relay/lib/python3.7/site-packages/salmon/"
+        /bin/sh -c 'cp -r {{ local_home }}/hermes-git/relay/changed/{{ item }} \
+        {{ local_home }}/hermes/salmon-relay/lib/python3.*/site-packages/salmon/'
       loop:
         - queue.py
         - server.py
@@ -385,8 +385,8 @@
 
     - name: Copy new files into salmon lib
       command: |
-        cp -r "{{ local_home }}/hermes-git/relay/new/{{ item }}" \
-        "{{ local_home }}/hermes/salmon-relay/lib/python3.7/site-packages/salmon/"
+        /bin/sh -c 'cp -r {{ local_home }}/hermes-git/relay/new/{{ item }} \
+        {{ local_home }}/hermes/salmon-relay/lib/python3.*/site-packages/salmon/'
       loop:
         - salmonconclude.py
         - salmondb.py
