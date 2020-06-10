@@ -5,7 +5,6 @@
     packages:
       - exim4-daemon-light 
       - git
-      - python3-distutils
       - build-essential
       - libffi-dev
       - python3
@@ -31,6 +30,18 @@
         name: "{{ item }}"
         state: present
       loop: "{{ packages }}"
+
+    - name: Installing correct version of python3-distutils
+      block:
+        - name: Installing python3-distutils
+          apt:
+            name: 'python3-distutils'
+      rescue:
+        - debug:
+            msg: 'python3-distutils package not found, trying python3-distutils-extra'
+        - name: Installing python3-distutils-extra
+          apt:
+            name: 'python3-distutils-extra'
 
 
 - name: Configure exim 4
