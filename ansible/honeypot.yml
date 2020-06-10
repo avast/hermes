@@ -234,6 +234,7 @@
     - block:
         - name: Generate new project
           shell: |
+            export LC_ALL=en_US.utf-8 && export LANG=en_US.utf-8
             . {{ local_home }}/hermes/salmon-receiver/bin/activate
             salmon gen myproject
           args:
@@ -241,6 +242,7 @@
       rescue:
         - name: Generate new project
           shell: |
+            export LC_ALL=en_US.utf-8 && export LANG=en_US.utf-8
             . {{ local_home }}/hermes/salmon-receiver/bin/activate
             salmon gen myproject -f
           args:
@@ -298,6 +300,7 @@
 
     - name: Generate new project
       shell: |
+        export LC_ALL=en_US.utf-8 && export LANG=en_US.utf-8
         . {{ local_home }}/hermes/salmon-relay/bin/activate
         salmon gen myproject
       args:
