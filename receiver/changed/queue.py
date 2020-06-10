@@ -123,9 +123,14 @@ class Queue(object):
         Pushes the message onto the queue.  Remember the order is probably
         not maintained.  It returns the key that gets created.
         """
-        if not isinstance(message.Data, (six.text_type, six.binary_type)):
+        if (
+            not isinstance(message.Data, (six.text_type, six.binary_type))
+            or message.Data.find(b"Content-Type: multipart/alternative;\n boundary=") < 0
+        ):
             message = str(message)
-        return self.mbox.add(message.Data)
+        else:
+            message = message.Data
+        return self.mbox.add(message)
 
     def pop(self):
         """
