@@ -62,6 +62,13 @@ If you want to run a program that checks the `run/queue` directory for incoming 
 
     python3 new_email_inotify.py -r <your_email_address>
 
+#### Upgrading With Ansible
+
+If you want to upgrade a deployed instance of Hermes with the latest features in master branch, use `upgrade.yaml` file. In ansible directory, simply run following code with wanted honeypot instances in `inventory` file.
+
+    ansible-playbook upgrade.yml
+
+
 ## Testing
 In `relay/new/tests` there are tests written using pytest. Go to the test directory (after installation) and run the tests as:
 

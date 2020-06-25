@@ -1,0 +1,179 @@
+---
+# Used to upgrade existing installation to lastest version in master branch
+  
+- name: Clone fresh source code
+  hosts: honeypots
+  vars:
+    local_home: "{{ ansible_env.HOME }}"
+
+  tasks:
+    - name: Clone a repository into $HOME/hermes-git
+      git:
+        repo: https://github.com/avast/hermes
+        version: master
+        dest: "{{ local_home }}/hermes-git"
+
+
+- name: Copy changed and new files in receiver
+  hosts: honeypots
+  vars:
+    local_home: "{{ ansible_env.HOME }}"
+
+  tasks:
+    - name: Copy queue.py, server.py, smtpd.py into salmon lib
+      command: |
+        /bin/sh -c 'cp -r {{ local_home }}/hermes-git/receiver/changed/{{ item }} \
+        {{ local_home }}/hermes/salmon-receiver/lib/python3.*/site-packages/salmon/'
+      loop:
+        - queue.py
+        - server.py
+        - smtpd.py
+
+    - name: Copy handlers/queue.py into salmon lib
+      command: |
+        /bin/sh -c 'cp -r {{ local_home }}/hermes-git/receiver/changed/handlers/queue.py \
+        {{ local_home }}/hermes/salmon-receiver/lib/python3.*/site-packages/salmon/handlers/'
+
+    - name: Copy boot.py, settings.py into config
+      command: |
+        cp -r "{{ local_home }}/hermes-git/receiver/changed/{{ item }}" \
+        "{{ local_home }}/hermes/salmon-receiver/myproject/config/"
+      loop:
+        - boot.py
+        - settings.py
+
+    - name: Copy sample.py into app/handlers
+      command: |
+        cp -r "{{ local_home }}/hermes-git/receiver/changed/sample.py" \
+        "{{ local_home }}/hermes/salmon-receiver/myproject/app/handlers/"
+
+    - name: Copy new_email_inotify.py into myproject/run
+      command: |
+        cp -r "{{ local_home }}/hermes-git/receiver/new/new_email_inotify.py" \
+        "{{ local_home }}/hermes/salmon-receiver/myproject/run/"
+
+
+- name: Copy changed and new files in relay
+  hosts: honeypots
+  vars:
+    local_home: "{{ ansible_env.HOME }}"
+
+  tasks:
+    - name: Copy queue.py, server.py, routing.py, mail.py into salmon lib
+      command: |
+        /bin/sh -c 'cp -r {{ local_home }}/hermes-git/relay/changed/{{ item }} \
+        {{ local_home }}/hermes/salmon-relay/lib/python3.*/site-packages/salmon/'
+      loop:
+        - queue.py
+        - server.py
+        - routing.py
+        - mail.py
+
+    - name: Copy new files into salmon lib
+      command: |
+        /bin/sh -c 'cp -r {{ local_home }}/hermes-git/relay/new/{{ item }} \
+        {{ local_home }}/hermes/salmon-relay/lib/python3.*/site-packages/salmon/'
+      loop:
+        - salmonconclude.py
+        - salmondb.py
+        - salmonmailparser.py
+        - salmonrelay.py
+        - salmonscheduler.py
+        - salmonspam.py
+        - base.py
+
+    - name: Copy boot.py, settings.py into config
+      command: |
+        cp -r "{{ local_home }}/hermes-git/relay/changed/{{ item }}" \
+        "{{ local_home }}/hermes/salmon-relay/myproject/config/"
+      loop:
+        - boot.py
+        - settings.py
+
+    - name: Copy sample.py into app/handlers
+      command: |
+        cp -r "{{ local_home }}/hermes-git/relay/changed/sample.py" \
+        "{{ local_home }}/hermes/salmon-relay/myproject/app/handlers/"
+
+    - name: Copy tests
+      command: |
+        cp -r "{{ local_home }}/hermes-git/relay/new/tests" \
+        "{{ local_home }}/hermes/salmon-relay/myproject/"
+
+    - name: Remove test_logging_relay.conf from tests directory
+      file:
+        path: "{{ local_home }}/hermes/salmon-relay/myproject/tests/test_logging_relay.conf"
+        state: absent
+
+    - name: Copy test_logging_relay.conf into config
+      command: |
+        cp -r "{{ local_home }}/hermes-git/relay/new/tests/test_logging_relay.conf" \
+        "{{ local_home }}/hermes/salmon-relay/myproject/config/"
+
+    - name: Copy salmonerrornotifier.py into configuration
+      command: |
+        cp -r "{{ local_home }}/hermes-git/relay/new/salmonerrornotifier.py" \
+        "{{ local_home }}/hermes/configuration/"
+
+    - name: Copy statistics files into myproject
+      command: |
+        cp -r "{{ local_home }}/hermes-git/{{ item }}" \
+        "{{ local_home }}/hermes/salmon-relay/myproject/"
+      loop:
+        - print_statistics.py
+        - statistics.sh
+
+    - name: Copy test_honeypot_working.py into configuration
+      command: |
+        cp -r "{{ local_home }}/hermes-git/test_honeypot_working.py" \
+        "{{ local_home }}/hermes/configuration/"
+
+    - name: Copy salmondeleteold.py and salmondeleteold.sh into myproject
+      command: |
+        cp -r "{{ local_home }}/hermes-git/relay/new/{{ item }}" \
+        "{{ local_home }}/hermes/salmon-relay/myproject/"
+      loop:
+        - salmondeleteold.py
+        - salmondeleteold.sh
+
+
+- name: Finalizing upgrade
+  hosts: honeypots
+  vars:
+    local_home: "{{ ansible_env.HOME }}"
+  
+  tasks:
+    - name: Remove git repository
+      file:
+        path: "{{ local_home }}/hermes-git"
+        state: absent
+
+    - name: Stop receiver
+      shell: |
+        export LC_ALL=en_US.utf-8 && export LANG=en_US.utf-8
+        salmon-receiver stop
+
+    - name: Stop relay
+      shell: |
+        export LC_ALL=en_US.utf-8 && export LANG=en_US.utf-8
+        salmon-relay stop
+
+    - name: Start receiver
+      shell: |
+        export LC_ALL=en_US.utf-8 && export LANG=en_US.utf-8
+        salmon-receiver start
+      register: receiver_result
+
+    - debug:
+        msg: Receiver started successfully
+      when: receiver_result.rc == 0
+
+    - name: Start relay
+      shell: |
+        export LC_ALL=en_US.utf-8 && export LANG=en_US.utf-8
+        salmon-relay start
+      register: relay_result
+
+    - debug:
+        msg: Relay started successfully
+      when: relay_result.rc == 0
