@@ -457,7 +457,7 @@
     local_home: "{{ ansible_env.HOME }}"
   vars_prompt:
     - name: error_msg_receiver
-      prompt: "Who will receive the error messages about a salmon crush?"
+      prompt: "Who will receive the error messages about a salmon crash?"
       private: no
     - name: listenhost
       prompt: "Type salmon IP address (listenhost)"
@@ -471,11 +471,11 @@
       private: no
       default: 'yes'
     - name: username
-      prompt: "Type username or press enter if you don't want to use credentials"
+      prompt: "Type username (ignore this field, if you chose not to use credentials)"
       private: no
       default: 'changeme@test.cz'
     - name: password
-      prompt: "Type password or press enter if you don't want to use credentials"
+      prompt: "Type password (ignore this field, if you chose not to use credentials)"
       private: no
       default: 'changeme'
     - name: relay_enabled
