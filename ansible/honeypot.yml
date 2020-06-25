@@ -519,7 +519,9 @@
         dest: "{{ local_home }}/hermes/configuration/salmon.yaml"
 
     - name: Start receiver
-      shell: salmon-receiver start
+      shell: |
+        export LC_ALL=en_US.utf-8 && export LANG=en_US.utf-8
+        salmon-receiver start
       register: receiver_result
 
     - debug:
@@ -527,7 +529,9 @@
       when: receiver_result.rc == 0
 
     - name: Start relay
-      shell: salmon-relay start
+      shell: |
+        export LC_ALL=en_US.utf-8 && export LANG=en_US.utf-8
+        salmon-relay start
       register: relay_result
 
     - debug:
