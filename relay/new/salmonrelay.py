@@ -68,7 +68,7 @@ def relay(mail_fields, key, mail_request, final_rating):
 
     if (
         len(mail_fields["attachmentFile"]) > 0
-        and utils.settings.data["relay"]["destroy_attachment"]
+        and utils.settings.data["relay"]["save_attachment"]
     ):
         save_attachment(mail_fields)
 
