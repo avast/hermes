@@ -68,7 +68,7 @@ def relay(mail_fields, key, mail_request, final_rating):
 
     if (
         len(mail_fields["attachmentFile"]) > 0
-        and utils.settings.data["relay"]["destroy_attachment"]
+        and utils.settings.data["relay"]["save_attachment"]
     ):
         save_attachment(mail_fields)
 
@@ -273,7 +273,9 @@ def destroy_reply_to(mail_fields, mail_request):
         "[+] (salmonrelay.py) - Destroying reply-to field from %s to %s" % 
         (mail_fields["reply-to"], destroyed_reply_to)
     )
-    mail_request["reply-to"] = destroyed_reply_to
+    mail_request.Data = mail_request.Data.replace(
+        bytes(reply_to, "utf-8"), bytes(destroyed_reply_to, "utf-8")
+    )
     return mail_request
 
 
