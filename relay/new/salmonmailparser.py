@@ -1,9 +1,9 @@
 """salmonmailparser module.
 
-This module takes care of the parsing of the email into the dictionary. 
-This dictionary is then passed to the salmonconclude module. 
-The dictionary is created from an instance of the MailRequest class. 
-If something goes wrong, the eml file is stored in the undeliverable email directory 
+This module takes care of the parsing of the email into the dictionary.
+This dictionary is then passed to the salmonconclude module.
+The dictionary is created from an instance of the MailRequest class.
+If something goes wrong, the eml file is stored in the undeliverable email directory
 with the name specified by the key argument.
 Author: Silvie Chlupová
 Date    Created: 09/17/2019
@@ -20,6 +20,7 @@ import shutil
 import ssdeep
 import os
 import quopri
+import signal
 from email.header import decode_header
 from datetime import datetime
 from email.utils import parseaddr
@@ -30,10 +31,44 @@ from salmon import salmonconclude
 from enum import Enum
 
 
+# Timeout decorator is needed to avoid 'Catastrophic Backtracting' URL regex
+class TimedOutExc(Exception):
+    """
+    Raised when a timeout happens
+    """
+
+
 class Code(Enum):
     SUCCESS = 1
     ERROR = 2
     UNDELIVERABLE = 3
+
+
+def timeout(timeout):
+    """
+    Return a decorator that raises a TimedOutExc exception
+    after timeout seconds, if the decorated function did not return.
+    """
+    def decorate(f):
+        def handler(signum, frame):
+            raise TimedOutExc()
+
+        def new_f(*args, **kwargs):
+
+            old_handler = signal.signal(signal.SIGALRM, handler)
+            signal.alarm(timeout)
+
+            result = f(*args, **kwargs)  # f() always returns, in this scheme
+
+            signal.signal(signal.SIGALRM, old_handler)  # Old signal handler is restored
+            signal.alarm(0)  # Alarm removed
+
+            return result
+
+        new_f.func_name = f.__name__
+        return new_f
+
+    return decorate
 
 
 def process_email(key, mail_request):
@@ -95,6 +130,7 @@ def process_email(key, mail_request):
     return mail_fields
 
 
+@timeout(1)
 def get_links_list(input_body):
     """Function gets links from the email body.
 
@@ -104,15 +140,19 @@ def get_links_list(input_body):
     Returns:
         list: List of links from text/plain or text/html.
     """
-    link_regex_pattern = re.compile(
-        r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)"
-        "(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+"
-        "|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?\xab\xbb\u201c\u201d\u2018\u2019]))"
-    )
-    link_list = set([mgroups[0] for mgroups in link_regex_pattern.findall(input_body)])
-    link_list = list(set(link_list))
-    logging.debug("[+] (salmonmailparser.py) - Found links %s." % ", ".join(link_list))
-    return link_list
+    try:
+        link_regex_pattern = re.compile(
+            r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)"
+            "(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+"
+            "|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?\xab\xbb\u201c\u201d\u2018\u2019]))"
+        )
+        link_list = set([mgroups[0] for mgroups in link_regex_pattern.findall(input_body)])
+        link_list = list(set(link_list))
+        logging.debug("[+] (salmonmailparser.py) - Found links %s." % ", ".join(link_list))
+        return link_list
+    except TimedOutExc:
+        logging.info("[+] (salmonmailparser.py) - Wild Catastrophic Backtracting appeared, returning empty list []")
+        return []
 
 
 def get_fuzzy_hash(mail_fields):
