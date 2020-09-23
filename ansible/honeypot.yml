@@ -513,6 +513,32 @@
         path: "{{ local_home }}/hermes-git"
         state: absent
 
+    - name : Rename python relay file
+      command: mv "{{ local_home }}/hermes/salmon-relay/bin/python" "{{ local_home }}/hermes/salmon-relay/bin/python-relay"
+
+    - name : Rename python receiver file
+      command: mv "{{ local_home }}/hermes/salmon-receiver/bin/python" "{{ local_home }}/hermes/salmon-receiver/bin/python-receiver"
+
+    - name : Rename salmon relay file
+      command: mv "{{ local_home }}/hermes/salmon-relay/bin/salmon" "{{ local_home }}/hermes/salmon-relay/bin/salmon-relay"
+
+    - name : Rename salmon receiver file
+      command: mv "{{ local_home }}/hermes/salmon-receiver/bin/salmon" "{{ local_home }}/hermes/salmon-receiver/bin/salmon-receiver"
+
+    - name: replace line in relay file
+      lineinfile: 
+        path: "{{ local_home }}/hermes/salmon-relay/bin/salmon-relay"
+        regexp: '^(.*)python(.*)$' 
+        line: 'python-relay'
+        backrefs: yes
+
+    - name: replace line in relay file
+      lineinfile: 
+        path: "{{ local_home }}/hermes/salmon-receiver/bin/salmon-receiver"
+        regexp: '^(.*)python(.*)$' 
+        line: 'python-receiver'
+        backrefs: yes
+
     - name: Render template for salmon.yaml
       template:
         src: salmon.j2

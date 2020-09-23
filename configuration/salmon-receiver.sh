@@ -9,14 +9,14 @@ cd myproject/
 
 if [ "$#" -eq 1 ]; then
     if [ "$1" == "start" ]; then
-        salmon start
+        salmon-receiver start
     elif [ "$1" == "status" ]; then
-        salmon status
+        salmon-receiver status
     elif [ "$1" == "stop" ]; then
-        salmon stop
+        salmon-receiver stop
     elif [ "$1" == "restart" ]; then
-        salmon stop
-        salmon start
+        salmon-receiver stop
+        salmon-receiver start
     else
         echo "unknown command"
         deactivate
@@ -24,8 +24,8 @@ if [ "$#" -eq 1 ]; then
     fi
 else
     if [ "$#" -eq 2 -a "$1" == "start" -a "$2" == "--force" ]; then
-        salmon stop
-        salmon start
+        salmon-receiver stop
+        salmon-receiver start
     else
         echo "unknown command"
         deactivate
