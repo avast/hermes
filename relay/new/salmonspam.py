@@ -1,7 +1,7 @@
 """salmonspam module.
 
 This module contains the Spam class which is instantiated from the salmonconclude module.
-This class holds the information about email rating. Methods in this class 
+This class holds the information about email rating. Methods in this class
 can change email rating based on checkpoints in salmonconclude.
 Author: Silvie Chlupová
 Date    Created: 04/26/2020
@@ -34,7 +34,7 @@ from salmon.salmondb import get_mail_fields
 
 
 class Spam:
-    """This class holds the information about email rating 
+    """This class holds the information about email rating
     and can change the spam rating.
 
     Attributes:
@@ -88,19 +88,19 @@ class Spam:
 
     def is_username_in_subject(self, usernames):
         for username in usernames:
-            if username in self.body_plain:
+            if username in self.subject:
                 return True
         return False
 
     def is_password_in_body_html(self, passwords):
         for password in passwords:
-            if password in self.body_plain:
+            if password in self.body_html:
                 return True
         return False
 
     def is_username_in_body_html(self, usernames):
         for username in usernames:
-            if username in self.body_plain:
+            if username in self.body_html:
                 return True
         return False
 
@@ -292,7 +292,7 @@ class Spam:
 
     def is_password_in_subject(self, passwords):
         for password in passwords:
-            if password in self.body_plain:
+            if password in self.subject:
                 return True
         return False
 
@@ -514,7 +514,7 @@ class Spam:
 
 
 def update_statistics(checkpoint_id):
-    """Function changes the statistics about a checkpoint that 
+    """Function changes the statistics about a checkpoint that
     changes the rating of the email.
 
     Args:
